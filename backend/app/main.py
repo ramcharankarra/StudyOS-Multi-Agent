@@ -69,6 +69,7 @@ default_origins = [
     "http://localhost:5174",
     "http://127.0.0.1:5174",
     "http://localhost:3000",
+    "https://studyos-frontend-production.up.railway.app",
 ]
 for origin in default_origins:
     if origin not in allowed_origins:
@@ -77,7 +78,7 @@ for origin in default_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origin_regex=r"https?://.*\.up\.railway\.app|https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

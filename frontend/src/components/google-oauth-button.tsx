@@ -18,10 +18,10 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
 }) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false)
 
-  // Configure Client ID from env or fallback public test Client ID
+  // Configure Client ID from env or fallback official project Client ID
   const GOOGLE_CLIENT_ID =
     import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    "1083427928236-fakeclientid.apps.googleusercontent.com"
+    "664970311984-5dvjh1nhqc8q5he1tq1e6qedi159rusr.apps.googleusercontent.com"
 
   useEffect(() => {
     // Listen for postMessage from Google Callback popup window
@@ -48,9 +48,10 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
     try {
       setIsAuthenticating(true)
       
-      const redirectUri =
-        import.meta.env.VITE_GOOGLE_REDIRECT_URI ||
-        `${window.location.origin}/auth/google/callback`
+      const envRedirect = import.meta.env.VITE_GOOGLE_REDIRECT_URI
+      const redirectUri = (envRedirect && !envRedirect.includes("localhost") && !envRedirect.includes("127.0.0.1"))
+        ? envRedirect
+        : `${window.location.origin}/auth/google/callback`
       const nonce = Math.random().toString(36).substring(2, 15)
       
       // Standard Official Google OAuth 2.0 Authorization Endpoint
