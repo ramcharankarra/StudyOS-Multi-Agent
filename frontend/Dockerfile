@@ -1,4 +1,4 @@
-# Railway Dockerfile - Production Build with Google Client ID
+# Railway Dockerfile - Production Build
 FROM node:22-alpine
 
 WORKDIR /app
@@ -9,8 +9,8 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_GOOGLE_CLIENT_ID=664970311984-5dvjh1nhqc8q5he1tq1e6qedi159rusr.apps.googleusercontent.com
-ARG VITE_GOOGLE_REDIRECT_URI=https://studyos-frontend-production.up.railway.app/auth/google/callback
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_GOOGLE_REDIRECT_URI
 ARG VITE_API_BASE_URL
 
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID

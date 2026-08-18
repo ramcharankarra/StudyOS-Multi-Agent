@@ -18,10 +18,8 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
 }) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false)
 
-  // Configure Client ID from env or fallback official project Client ID
-  const GOOGLE_CLIENT_ID =
-    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    "664970311984-5dvjh1nhqc8q5he1tq1e6qedi159rusr.apps.googleusercontent.com"
+  // Configure Client ID strictly from environment variable
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ""
 
   useEffect(() => {
     // Listen for postMessage from Google Callback popup window
