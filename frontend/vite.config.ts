@@ -20,4 +20,7 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    allowedHosts: ["studyos-frontend-production.up.railway.app"],
+  },
 })
