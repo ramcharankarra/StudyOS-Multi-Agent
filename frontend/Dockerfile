@@ -1,3 +1,4 @@
+# Railway Dockerfile - Production Build with Google Client ID
 FROM node:22-alpine
 
 WORKDIR /app
