@@ -270,6 +270,7 @@ async def _run_mission_background(
         db.add(MissionLog(mission_id=mission.id, timestamp_str=now_str, message="CoordinatorAgent: Analyzing Mission Goal & Structuring Task Graph", log_type="info"))
         db.commit()
 
+        logger.info(f"[COORDINATOR_STARTED] mission_id='{mission.id}' | course_id='{course_id}' | goal='{effective_goal}'")
         coordinator = CoordinatorAgent()
         task_graph = await coordinator.generate_task_graph(
             goal=effective_goal,
@@ -286,6 +287,7 @@ async def _run_mission_background(
         db.commit()
 
         raw_tasks = task_graph.get("tasks", [])
+        logger.info(f"[COORDINATOR_COMPLETED] mission_id='{mission.id}' | tasks_generated={len(raw_tasks)}")
         goal_lower = effective_goal.lower()
         requires_course_mgmt = any(kw in goal_lower for kw in ["assignment", "syllabus structure", "module organization", "course management"])
         
