@@ -1,0 +1,16 @@
+{
+  "short_name": "StudyOS",
+  "name": "StudyOS — Agentic AI Learning Management System",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#E8653A",
+  "background_color": "#FAF8F5",
+  "description": "Production AI-powered Learning Management System for Students and Teachers."
+}
