@@ -168,8 +168,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     if (!response.ok) {
-      const err = await response.json()
-      throw new Error(err.detail || "Incorrect email or password.")
+      let errDetail = "Incorrect email or password."
+      try {
+        const err = await response.json()
+        errDetail = err.detail || errDetail
+      } catch (e) {
+        errDetail = `Server Error (${response.status} ${response.statusText || "Bad Gateway"})`
+      }
+      throw new Error(errDetail)
     }
 
     const data = await response.json()
@@ -205,8 +211,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     if (!response.ok) {
-      const err = await response.json()
-      throw new Error(err.detail || "Registration failed. Try a different email.")
+      let errDetail = "Registration failed. Try a different email."
+      try {
+        const err = await response.json()
+        errDetail = err.detail || errDetail
+      } catch (e) {
+        errDetail = `Server Error (${response.status} ${response.statusText || "Bad Gateway"})`
+      }
+      throw new Error(errDetail)
     }
 
     // Automatically log user in right after signup!
@@ -229,8 +241,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     if (!response.ok) {
-      const err = await response.json()
-      throw new Error(err.detail || "Google Authentication failed.")
+      let errDetail = "Google Authentication failed."
+      try {
+        const err = await response.json()
+        errDetail = err.detail || errDetail
+      } catch (e) {
+        errDetail = `Server Error (${response.status} ${response.statusText || "Bad Gateway"})`
+      }
+      throw new Error(errDetail)
     }
 
     const data = await response.json()
