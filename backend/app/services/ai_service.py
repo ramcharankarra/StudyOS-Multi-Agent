@@ -161,7 +161,6 @@ class AIService:
         models_to_try = [
             "models/gemini-3.5-flash",
             "models/gemini-3.6-flash",
-            "models/gemini-3.5-flash-lite",
             "models/gemini-flash-latest",
             "models/gemini-pro-latest"
         ]

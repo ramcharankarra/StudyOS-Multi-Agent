@@ -186,16 +186,20 @@ export const TeacherQuizzesPage: React.FC = () => {
     setDescription("")
     setGoal("")
     setDeadline("")
-    setQuestions([
-      {
-        question_text: "",
-        question_type: "MCQ",
-        options: ["Option A", "Option B", "Option C", "Option D"],
-        correct_answer: "Option A",
-        explanation: "",
-        points: 10
-      }
-    ])
+    if (mode === "ai") {
+      setQuestions([])
+    } else {
+      setQuestions([
+        {
+          question_text: "",
+          question_type: "MCQ",
+          options: ["Option A", "Option B", "Option C", "Option D"],
+          correct_answer: "Option A",
+          explanation: "",
+          points: 10
+        }
+      ])
+    }
     setIsModalOpen(true)
   }
 
@@ -819,9 +823,16 @@ export const TeacherQuizzesPage: React.FC = () => {
                     <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground font-heading">
                       Quiz Questions ({questions.length})
                     </h4>
-                    <Button type="button" variant="outline" size="sm" onClick={handleAddQuestion} className="font-bold text-xs gap-1.5 rounded-xl">
-                      <Plus className="h-3.5 w-3.5" /> Add Question
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {createMode === "ai" && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setQuestions([])} className="font-bold text-xs gap-1.5 rounded-xl text-amber-600 hover:bg-amber-500/10">
+                          <Sparkles className="h-3.5 w-3.5" /> Re-generate with AI
+                        </Button>
+                      )}
+                      <Button type="button" variant="outline" size="sm" onClick={handleAddQuestion} className="font-bold text-xs gap-1.5 rounded-xl">
+                        <Plus className="h-3.5 w-3.5" /> Add Question
+                      </Button>
+                    </div>
                   </div>
 
                   {questions.map((q, idx) => (

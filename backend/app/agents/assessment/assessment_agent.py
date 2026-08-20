@@ -225,7 +225,14 @@ class AssessmentAgent(BaseAgent):
             "total_points": 100,
             "rubric": ["Conceptual Understanding (40 pts)", "Accuracy & Solution Quality (40 pts)", "Clarity of Explanation (20 pts)"]
         }
-        res_json = await GeminiService.generate_json(prompt, fallback_data=fallback)
+        res_json = await GeminiService.generate_json(
+            prompt,
+            fallback_data=fallback,
+            context_chunks=document_chunks[:5] if document_chunks else None
+        )
+        if not isinstance(res_json, dict):
+            res_json = fallback
+
         return {
             "status": "success",
             "artifact_type": "ASSIGNMENT",
