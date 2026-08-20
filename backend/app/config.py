@@ -15,5 +15,6 @@ class Settings:
     GOOGLE_REDIRECT_URI: str = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:5173/auth/google/callback")
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8000")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
 settings = Settings()

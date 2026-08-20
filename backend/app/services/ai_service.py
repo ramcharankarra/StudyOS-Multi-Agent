@@ -35,15 +35,12 @@ class AIService:
         if cls._cached_api_key:
             return cls._cached_api_key
 
-        api_key = os.getenv("GEMINI_API_KEY")
+        from app.config import settings
+        api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", "")
 
         if not api_key:
-            # Check backend/.env file
-            possible_env_paths = [
-                "/Users/charan/Downloads/agents/backend/.env",
-                "/Users/charan/Downloads/ticket_assessment/.env",
-                ".env"
-            ]
+            # Check relative .env file
+            possible_env_paths = [".env"]
             for env_path in possible_env_paths:
                 if os.path.exists(env_path):
                     try:
