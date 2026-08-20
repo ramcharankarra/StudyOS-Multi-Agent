@@ -27,10 +27,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger("studyos")
 
-# Initialize database tables
+def run_auto_migrations():
+    try:
+        from alembic.config import Config
+        from alembic import command
+        from app.config import settings
+
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        alembic_ini_path = os.path.join(base_dir, "alembic.ini")
+        alembic_cfg = Config(alembic_ini_path)
+
+        alembic_dir = os.path.join(base_dir, "alembic")
+        alembic_cfg.set_main_option("script_location", alembic_dir)
+
+        db_url = os.getenv("DATABASE_URL") or getattr(settings, "DATABASE_URL", "")
+        if db_url:
+            alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+
+        logger.info("[ProductionHardening] Applying Alembic database migrations (upgrade head)...")
+        command.upgrade(alembic_cfg, "head")
+        logger.info("[ProductionHardening] Alembic database migrations applied successfully.")
+    except Exception as e:
+        logger.critical(f"[ProductionHardening] Alembic database migration failed: {str(e)}")
+        raise e
+
+# Initialize database schema & tables
 try:
+    run_auto_migrations()
     Base.metadata.create_all(bind=engine)
-    logger.info("[ProductionHardening] Database tables verified successfully.")
+    logger.info("[ProductionHardening] Database schema & tables verified successfully.")
 except Exception as e:
     logger.critical(f"[ProductionHardening] Database initialization failed: {str(e)}")
 

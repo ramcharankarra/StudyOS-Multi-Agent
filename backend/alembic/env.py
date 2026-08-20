@@ -34,7 +34,8 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 def run_migrations_online() -> None:
-    url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/studyos")
+    from app.config import settings
+    url = os.getenv("DATABASE_URL") or getattr(settings, "DATABASE_URL", "postgresql://charan@localhost:5432/studyos")
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = url
 
