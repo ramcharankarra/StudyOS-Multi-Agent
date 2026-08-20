@@ -46,6 +46,13 @@ class AIGenerateQuizRequest(BaseModel):
     goal: Optional[str] = None
 
 
+class AIGenerateAssignmentRequest(BaseModel):
+    course_id: str
+    topic: Optional[str] = None
+    goal: Optional[str] = None
+    difficulty: Optional[str] = "Medium"
+
+
 # ---------------------------------------------------------------
 # Response Sanitizer
 # ---------------------------------------------------------------
@@ -502,6 +509,9 @@ async def generate_ai_quiz(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
+    if current_user.role.lower() == "teacher" and course.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not authorized to generate content for this course")
+
     goal_prompt = payload.goal or f"Comprehensive practice assessment for course {course.title}"
     context_data = ContextService.build_user_context(
         db=db,
@@ -517,7 +527,45 @@ async def generate_ai_quiz(
         goal=goal_prompt,
         document_chunks=document_chunks,
         difficulty=payload.difficulty or "Medium",
-        num_questions=payload.num_questions or 5
+        num_questions=payload.num_questions or 5,
+        course_id=str(course.id)
+    )
+
+    return result
+
+
+@router.post("/ai/generate-assignment")
+async def generate_ai_assignment(
+    payload: AIGenerateAssignmentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Generate an educational assignment with rubric using AssessmentAgent and ContextService."""
+    from app.services.context_service import ContextService
+    from app.agents.assessment.assessment_agent import AssessmentAgent
+
+    course = db.query(Course).filter(Course.id == payload.course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    if current_user.role.lower() == "teacher" and course.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not authorized to generate assignments for this course")
+
+    goal_prompt = payload.topic or payload.goal or f"Comprehensive assignment for course {course.title}"
+    context_data = ContextService.build_user_context(
+        db=db,
+        user=current_user,
+        goal_prompt=goal_prompt,
+        explicit_course_id=payload.course_id
+    )
+    document_chunks = context_data.get("rag_document_chunks", [])
+
+    agent = AssessmentAgent()
+    result = await agent.generate_assignment(
+        course_title=course.title,
+        goal=goal_prompt,
+        document_chunks=document_chunks,
+        difficulty=payload.difficulty or "Medium"
     )
 
     return result

@@ -46,10 +46,7 @@ export const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
     try {
       setIsAuthenticating(true)
       
-      const envRedirect = import.meta.env.VITE_GOOGLE_REDIRECT_URI
-      const redirectUri = (envRedirect && !envRedirect.includes("localhost") && !envRedirect.includes("127.0.0.1"))
-        ? envRedirect
-        : `${window.location.origin}/auth/google/callback`
+      const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`
       const nonce = Math.random().toString(36).substring(2, 15)
       
       // Standard Official Google OAuth 2.0 Authorization Endpoint

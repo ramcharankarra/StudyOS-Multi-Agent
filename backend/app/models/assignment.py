@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -29,6 +29,8 @@ class Submission(Base):
     file_url = Column(String(500), nullable=False)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     status = Column(String(20), default="submitted", nullable=False) # 'submitted', 'graded', 'pending'
+    score = Column(Float, nullable=True)
+    grade = Column(String(50), nullable=True)
 
     # Relationships
     assignment = relationship("Assignment", back_populates="submissions")

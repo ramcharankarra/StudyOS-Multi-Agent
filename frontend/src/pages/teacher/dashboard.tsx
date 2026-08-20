@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { 
@@ -15,10 +15,52 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
+import type { Course } from "@/types"
+
+interface TeacherAnalytics {
+  total_courses: number
+  total_students: number
+  total_assignments: number
+  total_submissions: number
+  total_quizzes: number
+  submission_rate: number
+  ai_suggestions: string[]
+}
 
 export const TeacherDashboardPage: React.FC = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, apiFetch } = useAuth()
+
+  const [stats, setStats] = useState<TeacherAnalytics | null>(null)
+  const [courses, setCourses] = useState<Course[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const [statsRes, coursesRes] = await Promise.all([
+        apiFetch("/api/v1/analytics/teacher"),
+        apiFetch("/api/v1/courses")
+      ])
+
+      if (statsRes.ok) {
+        const data = await statsRes.json()
+        setStats(data)
+      }
+      if (coursesRes.ok) {
+        const data = await coursesRes.json()
+        setCourses(data)
+      }
+    } catch (e) {
+      console.error("[TeacherDashboard] Error loading analytics:", e)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [apiFetch])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -61,7 +103,7 @@ export const TeacherDashboardPage: React.FC = () => {
               </div>
 
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-heading leading-tight">
-                Welcome back, Professor <span className="text-primary">{user?.name || "Teacher"}</span>!
+                Welcome back, Professor <span className="text-primary">{(user as any)?.full_name || user?.name || "Teacher"}</span>!
               </h1>
 
               <p className="text-muted-foreground text-sm sm:text-base font-sans leading-relaxed">
@@ -96,7 +138,7 @@ export const TeacherDashboardPage: React.FC = () => {
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active Courses</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold tracking-tight font-heading">0</span>
+                <span className="text-2xl font-extrabold tracking-tight font-heading">{isLoading ? "..." : stats?.total_courses ?? courses.length}</span>
                 <span className="text-[11px] text-muted-foreground">Published</span>
               </div>
             </div>
@@ -112,7 +154,7 @@ export const TeacherDashboardPage: React.FC = () => {
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Students</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold tracking-tight font-heading">0</span>
+                <span className="text-2xl font-extrabold tracking-tight font-heading">{isLoading ? "..." : stats?.total_students ?? 0}</span>
                 <span className="text-[11px] text-muted-foreground">Enrolled</span>
               </div>
             </div>
@@ -128,7 +170,7 @@ export const TeacherDashboardPage: React.FC = () => {
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Quizzes Created</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold tracking-tight font-heading">0</span>
+                <span className="text-2xl font-extrabold tracking-tight font-heading">{isLoading ? "..." : stats?.total_quizzes ?? 0}</span>
                 <span className="text-[11px] text-muted-foreground">Active</span>
               </div>
             </div>
@@ -142,10 +184,10 @@ export const TeacherDashboardPage: React.FC = () => {
               <FileCheck className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending Grading</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Submissions</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold tracking-tight font-heading">0</span>
-                <span className="text-[11px] text-emerald-600 font-semibold">Up to date</span>
+                <span className="text-2xl font-extrabold tracking-tight font-heading">{isLoading ? "..." : stats?.total_submissions ?? 0}</span>
+                <span className="text-[11px] text-emerald-600 font-semibold">{stats?.submission_rate ?? 0}% rate</span>
               </div>
             </div>
           </CardContent>
@@ -168,27 +210,53 @@ export const TeacherDashboardPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* Friendly Handcrafted Empty State */}
-          <Card className="p-8 text-center border-dashed border-border/80 bg-gradient-to-b from-card to-muted/20">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-500/10 text-amber-600 mb-4 shadow-sm">
-              <School className="h-8 w-8" />
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map((n) => (
+                <div key={n} className="h-24 rounded-2xl bg-muted/40 animate-pulse border border-border/40" />
+              ))}
             </div>
-            <h3 className="text-lg font-bold font-heading mb-1">No active courses created</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">
-              You haven't built any courses yet. Create your first syllabus and syllabus modules to start teaching students.
-            </p>
-            <Button onClick={() => navigate("/teacher/courses")} className="font-bold gap-2">
-              <Plus className="h-4 w-4" />
-              Create Your First Course
-            </Button>
-          </Card>
+          ) : courses.length === 0 ? (
+            <Card className="p-8 text-center border-dashed border-border/80 bg-gradient-to-b from-card to-muted/20">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-500/10 text-amber-600 mb-4 shadow-sm">
+                <School className="h-8 w-8" />
+              </div>
+              <h3 className="text-lg font-bold font-heading mb-1">No active courses created</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">
+                You haven't built any courses yet. Create your first syllabus and syllabus modules to start teaching students.
+              </p>
+              <Button onClick={() => navigate("/teacher/courses")} className="font-bold gap-2">
+                <Plus className="h-4 w-4" />
+                Create Your First Course
+              </Button>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {courses.map((c) => (
+                <Card key={c.id} className="p-4 hover:border-primary/40 transition-all border-border/70">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-sm text-foreground">{c.title}</h4>
+                      {c.description && <p className="text-xs text-muted-foreground line-clamp-1">{c.description}</p>}
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <span>Join Code: <strong className="text-primary font-mono">{c.join_code}</strong></span>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => navigate("/teacher/courses")} className="text-xs font-bold gap-1">
+                      Manage <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Panel: Student Enrolments (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold font-heading">Student Enrollments</h2>
+              <h2 className="text-xl font-bold font-heading">Student Analytics</h2>
               <p className="text-xs text-muted-foreground">Roster and student activity</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => navigate("/teacher/students")} className="text-primary font-bold text-xs gap-1">
@@ -196,18 +264,31 @@ export const TeacherDashboardPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* Friendly Handcrafted Schedule Empty State */}
-          <Card className="p-8 text-center border-dashed border-border/80 bg-gradient-to-b from-card to-emerald-500/[0.02]">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 mb-4 shadow-sm">
-              <GraduationCap className="h-8 w-8" />
+          <Card className="p-6 border-border/80 bg-gradient-to-b from-card to-emerald-500/[0.02] space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 shrink-0">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold font-heading">{stats?.total_students ?? 0} Enrolled Students</h3>
+                <p className="text-xs text-muted-foreground">Across {stats?.total_courses ?? courses.length} active courses</p>
+              </div>
             </div>
-            <h3 className="text-lg font-bold font-heading mb-1">No enrolled students</h3>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed mb-6">
-              Once students join your published courses, their enrollment details and grade analytics will appear here.
-            </p>
-            <Button variant="outline" onClick={() => navigate("/teacher/students")} className="font-bold gap-2">
+
+            <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-2 text-xs">
+              <div className="flex justify-between font-semibold">
+                <span className="text-muted-foreground">Assignment Submissions:</span>
+                <span className="text-foreground font-bold">{stats?.total_submissions ?? 0}</span>
+              </div>
+              <div className="flex justify-between font-semibold">
+                <span className="text-muted-foreground">Submission Rate:</span>
+                <span className="text-emerald-600 font-bold">{stats?.submission_rate ?? 0}%</span>
+              </div>
+            </div>
+
+            <Button variant="outline" onClick={() => navigate("/teacher/students")} className="w-full font-bold gap-2 text-xs rounded-xl">
               <Users className="h-4 w-4" />
-              Manage Roster
+              Open Student Roster & Insights
             </Button>
           </Card>
         </div>

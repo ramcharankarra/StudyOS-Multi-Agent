@@ -184,41 +184,73 @@ export const StudentQuizzesPage: React.FC = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {quizzes.map((q) => (
-            <motion.div
-              key={q.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="hover-lift border-border/80 h-full flex flex-col justify-between">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/25 text-[10px] uppercase font-extrabold">
-                      Available
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {new Date(q.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
+          {quizzes.map((q) => {
+            const isCompleted = q.completed
+            const isOverdue = q.status === "OVERDUE"
 
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-base font-heading text-foreground line-clamp-1">{q.title}</h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed font-sans">
-                      {q.description || "Course practice evaluation."}
-                    </p>
-                  </div>
+            return (
+              <motion.div
+                key={q.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="hover-lift border-border/80 h-full flex flex-col justify-between">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      {isCompleted ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/25 text-[10px] uppercase font-extrabold flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> Score: {q.score}%
+                        </span>
+                      ) : isOverdue ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-600 border border-red-500/25 text-[10px] uppercase font-extrabold">
+                          Overdue
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 border border-amber-500/25 text-[10px] uppercase font-extrabold">
+                          Available
+                        </span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground">
+                        {q.question_count ?? 5} Questions
+                      </span>
+                    </div>
 
-                  <Button
-                    onClick={() => startQuiz(q)}
-                    className="w-full font-bold gap-2 shadow-md shadow-primary/20"
-                  >
-                    Attempt Quiz
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-base font-heading text-foreground line-clamp-1">{q.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed font-sans">
+                        {q.description || "Course practice evaluation."}
+                      </p>
+                      {q.deadline && (
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 pt-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>Deadline: {new Date(q.deadline).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {isCompleted ? (
+                      <Button
+                        onClick={() => startQuiz(q)}
+                        variant="outline"
+                        className="w-full font-bold gap-2 text-xs border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Retake Quiz ({q.score}%)
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => startQuiz(q)}
+                        className="w-full font-bold gap-2 shadow-md shadow-primary/20"
+                      >
+                        Start Quiz
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
         </div>
       )}
 

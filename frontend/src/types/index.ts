@@ -17,6 +17,7 @@ export interface Course {
   description?: string
   thumbnail_url?: string
   teacher_id: string
+  join_code?: string
   visibility: "public" | "private"
   created_at: string
   updated_at: string
@@ -48,6 +49,10 @@ export interface Assignment {
   description?: string
   deadline?: string
   created_at: string
+  status?: string
+  submitted?: boolean
+  submitted_at?: string
+  submission_count?: number
 }
 
 export interface Submission {
@@ -64,8 +69,15 @@ export interface Quiz {
   course_id: string
   title: string
   description?: string
-  created_by: string
+  deadline?: string
+  created_by?: string
   created_at: string
+  question_count?: number
+  completed?: boolean
+  score?: number
+  attempt_id?: string
+  attempt_count?: number
+  status?: string
 }
 
 export interface Question {

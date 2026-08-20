@@ -418,3 +418,46 @@ def leave_course(
         "status": "success",
         "message": f"You have left '{course_title}'. You will no longer see materials or AI workspace context for this course."
     }
+
+
+@router.get("/{course_id}/students")
+def get_course_enrolled_students(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["teacher"]))
+):
+    """
+    Returns list of enrolled students for a course owned by the teacher.
+    """
+    try:
+        c_uuid = uuid.UUID(course_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid course ID format")
+
+    course = db.query(Course).filter(Course.id == c_uuid).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    if course.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to view student list for this course")
+
+    enrollments = db.query(Enrollment).filter(Enrollment.course_id == c_uuid).order_by(Enrollment.joined_at.desc()).all()
+    
+    students_list = []
+    for enr in enrollments:
+        student = db.query(User).filter(User.id == enr.student_id).first()
+        if student:
+            students_list.append({
+                "id": str(student.id),
+                "name": student.full_name,
+                "email": student.email,
+                "role": student.role,
+                "joined_at": enr.joined_at.isoformat() if enr.joined_at else None
+            })
+
+    return {
+        "course_id": str(course.id),
+        "course_title": course.title,
+        "student_count": len(students_list),
+        "students": students_list
+    }

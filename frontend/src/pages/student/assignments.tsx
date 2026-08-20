@@ -163,7 +163,8 @@ export const StudentAssignmentsPage: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {assignments.map((a) => {
-            const isSubmitted = submittedIds.includes(a.id)
+            const isSubmitted = a.submitted || submittedIds.includes(a.id)
+            const statusLabel = a.status || (isSubmitted ? "SUBMITTED" : "PENDING")
 
             return (
               <Card key={a.id} className="overflow-hidden border border-border/70 shadow-xs rounded-2xl">
@@ -178,6 +179,14 @@ export const StudentAssignmentsPage: React.FC = () => {
                     {a.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2 pl-9">{a.description}</p>
                     )}
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-muted-foreground pl-9 pt-1">
+                      {a.deadline && (
+                        <span>Deadline: <strong className="text-amber-600 font-bold">{new Date(a.deadline).toLocaleString()}</strong></span>
+                      )}
+                      {a.submitted_at && (
+                        <span>Submitted on: <strong className="text-emerald-600 font-bold">{new Date(a.submitted_at).toLocaleString()}</strong></span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0 pl-9 sm:pl-0">
@@ -185,6 +194,15 @@ export const StudentAssignmentsPage: React.FC = () => {
                       <span className="text-xs font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Submitted
                       </span>
+                    ) : statusLabel === "OVERDUE" ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-red-600 bg-red-500/10 px-2.5 py-1 rounded-xl border border-red-500/20">
+                          Overdue
+                        </span>
+                        <Button onClick={() => setActiveAssignment(a)} size="sm" variant="outline" className="font-bold text-xs gap-1 rounded-xl">
+                          Submit Late
+                        </Button>
+                      </div>
                     ) : (
                       <Button onClick={() => setActiveAssignment(a)} size="sm" className="font-bold text-xs gap-1.5 rounded-xl">
                         Submit Solution <ArrowRight className="h-3.5 w-3.5" />

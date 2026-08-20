@@ -52,32 +52,17 @@ class AssessmentAgent(BaseAgent):
         goal: str,
         document_chunks: List[str],
         difficulty: str = "Medium",
-        num_questions: int = 5
+        num_questions: int = 5,
+        course_id: Optional[str] = None
     ) -> Dict[str, Any]:
         document_chunks = [c for c in (document_chunks or []) if c and len(c.strip()) > 15]
 
-        # 1. Zero Material Check: Fallback to General Knowledge for general AI requests if no course materials exist
+        # 1. Zero Material Check: Fallback to General Knowledge if no course materials exist
         if not document_chunks:
-            if not context.get("course_id"):
+            if not course_id:
                 document_chunks = [f"General Knowledge Quiz Topic: {goal}\nCourse Context: {course_title}"]
             else:
-                refusal_msg = "Unable to generate a material-grounded test because relevant course content was not found."
-                logger.info(f"[AssessmentAgent] Refusal triggered: {refusal_msg}")
-                return {
-                    "status": "refusal",
-                    "artifact_type": "MOCK_TEST",
-                    "title": "Unable to Generate Mock Test",
-                    "description": refusal_msg,
-                    "data": {
-                        "refusal": True,
-                        "title": "Unable to Generate Mock Test",
-                        "description": refusal_msg,
-                        "markdown": refusal_msg,
-                        "response": refusal_msg,
-                        "questions": [],
-                        "no_materials_warning": refusal_msg
-                    }
-                }
+                document_chunks = [f"Course Context: {course_title}\nQuiz Topic: {goal}\nFocus on core principles and practical problem solving."]
 
         # 2. Subject Mismatch Validation
         from app.services.context_service import ContextService
@@ -210,25 +195,45 @@ class AssessmentAgent(BaseAgent):
             "data": final_quiz
         }
 
-    async def generate_assignment(self, course_title: str, goal: str) -> Dict[str, Any]:
+    async def generate_assignment(
+        self,
+        course_title: str,
+        goal: str,
+        document_chunks: Optional[List[str]] = None,
+        difficulty: str = "Medium"
+    ) -> Dict[str, Any]:
+        document_chunks = [c for c in (document_chunks or []) if c and len(c.strip()) > 15]
+        rag_context = ""
+        if document_chunks:
+            rag_context = "\n=== COURSE MATERIAL CONTEXT ===\n" + "\n".join(document_chunks[:5]) + "\n===============================\n"
+
         prompt = (
-            f"Generate an educational assignment for course '{course_title}' on goal: '{goal}'.\n"
+            f"You are the AssessmentAgent in MindOS. Generate an educational assignment for course '{course_title}' on goal: '{goal}'.\n"
+            f"DIFFICULTY LEVEL: {difficulty}\n"
+            f"{rag_context}\n"
             "Return JSON matching:\n"
             "{\n"
             '  "title": "Assignment Title",\n'
-            '  "description": "Overview of assignment tasks",\n'
+            '  "description": "Clear step-by-step instructions and problem description",\n'
             '  "total_points": 100,\n'
             '  "rubric": ["Criterion 1 (30 pts)", "Criterion 2 (30 pts)", "Criterion 3 (40 pts)"]\n'
             "}"
         )
         fallback = {
             "title": f"Assignment: {goal[:30]}",
-            "description": f"Practical course assignment for {course_title}",
+            "description": f"Practical assignment for {course_title} covering {goal}.",
             "total_points": 100,
             "rubric": ["Conceptual Understanding (40 pts)", "Accuracy & Solution Quality (40 pts)", "Clarity of Explanation (20 pts)"]
         }
         res_json = await GeminiService.generate_json(prompt, fallback_data=fallback)
-        return {"status": "success", "artifact_type": "ASSIGNMENT", "data": res_json}
+        return {
+            "status": "success",
+            "artifact_type": "ASSIGNMENT",
+            "title": res_json.get("title", f"Assignment: {goal[:30]}"),
+            "description": res_json.get("description", f"Practical assignment for {course_title}"),
+            "rubric": res_json.get("rubric", fallback["rubric"]),
+            "data": res_json
+        }
 
     async def evaluate_submission(self, question: str, student_answer: str, rubric: str) -> Dict[str, Any]:
         prompt = (

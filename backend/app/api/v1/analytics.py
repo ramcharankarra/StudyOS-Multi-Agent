@@ -8,6 +8,7 @@ from app.dependencies.rbac import require_role
 from app.models.user import User
 from app.models.course import Course, Enrollment
 from app.models.assignment import Assignment, Submission
+from app.models.quiz import Quiz
 from app.models.assessment import QuizAttempt
 from app.models.planner import DailyTask
 from app.models.mission import Mission
@@ -196,6 +197,12 @@ def get_teacher_analytics(
                 Submission.assignment_id.in_(assignment_ids)
             ).count()
 
+    total_quizzes = 0
+    if course_ids:
+        total_quizzes = db.query(Quiz).filter(
+            Quiz.course_id.in_(course_ids)
+        ).count()
+
     submission_rate = round((total_submissions / max(total_assignments * max(total_students, 1), 1)) * 100, 1)
 
     return {
@@ -203,6 +210,7 @@ def get_teacher_analytics(
         "total_students": total_students,
         "total_assignments": total_assignments,
         "total_submissions": total_submissions,
+        "total_quizzes": total_quizzes,
         "submission_rate": submission_rate,
         "ai_suggestions": [
             "Review student performance trends for your courses.",
